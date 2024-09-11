@@ -143,3 +143,13 @@ devicePlugin:
     gpu: "on"
   tolerations: []
 
+devices:
+  ascend:
+    enabled: true
+    resources:
+      - huawei.com/Ascend910A
+      - huawei.com/Ascend910A-memory
+      - huawei.com/Ascend910B
+      - huawei.com/Ascend910B-memory
+      - huawei.com/Ascend310P
+      - huawei.com/Ascend310P-memory
