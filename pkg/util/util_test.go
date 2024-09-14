@@ -18,6 +18,8 @@ package util
 
 import (
 	"fmt"
+	"os"
+	"path"
 	"testing"
 
 	"gotest.tools/v3/assert"
@@ -279,6 +281,54 @@ func TestUnMarshalNodeDevices(t *testing.T) {
 				return
 			}
 			assert.DeepEqual(t, got, tt.want)
+		})
+	}
+}
+
+func TestCopyFile(t *testing.T) {
+	type args struct {
+		content string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "test one",
+			args: args{
+				content: "test content",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir, err := os.MkdirTemp("", "test_copy_file")
+			if err != nil {
+				t.Errorf("CopyFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			defer func(path string) {
+				_ = os.RemoveAll(path)
+			}(tempDir)
+
+			src := path.Join(tempDir, "src")
+			dst := path.Join(tempDir, "dst")
+			err = os.WriteFile(tempDir+"/src", []byte(tt.args.content), 0644)
+			if err != nil {
+				t.Errorf("CopyFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if err := CopyFile(src, dst); (err != nil) != tt.wantErr {
+				t.Errorf("CopyFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			dstContent, err := os.ReadFile(dst)
+			if err != nil {
+				t.Errorf("CopyFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			assert.DeepEqual(t, dstContent, []byte(tt.args.content))
 		})
 	}
 }

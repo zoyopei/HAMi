@@ -369,13 +369,21 @@ func (plugin *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *kubeletdev
 			os.Chmod(cacheFileHostDirectory, 0777)
 			os.MkdirAll("/tmp/vgpulock", 0777)
 			os.Chmod("/tmp/vgpulock", 0777)
+			// copy libvgpu.so to cache file directory
+			hostLibFile := path.Join(cacheFileHostDirectory, "libvgpu.so")
+			err = util.CopyFile(path.Join(hostHookPath, "vgpu", "libvgpu.so"), hostLibFile)
+			if err != nil {
+				device.PodAllocationFailed(nodename, current, NodeLockNvidia)
+				return nil, fmt.Errorf("failed to copy libvgpu.so: %v", err)
+			}
+
 			response.Mounts = append(response.Mounts,
-				&kubeletdevicepluginv1beta1.Mount{ContainerPath: fmt.Sprintf("%s/vgpu/libvgpu.so", hostHookPath),
-					HostPath: hostHookPath + "/vgpu/libvgpu.so",
-					ReadOnly: true},
 				&kubeletdevicepluginv1beta1.Mount{ContainerPath: fmt.Sprintf("%s/vgpu", hostHookPath),
 					HostPath: cacheFileHostDirectory,
 					ReadOnly: false},
+				&kubeletdevicepluginv1beta1.Mount{ContainerPath: fmt.Sprintf("%s/vgpu/libvgpu.so", hostHookPath),
+					HostPath: hostLibFile,
+					ReadOnly: true},
 				&kubeletdevicepluginv1beta1.Mount{ContainerPath: "/tmp/vgpulock",
 					HostPath: "/tmp/vgpulock",
 					ReadOnly: false},

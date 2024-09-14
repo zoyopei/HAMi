@@ -22,6 +22,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -414,4 +416,37 @@ func MarkAnnotationsToDelete(devType string, nn string) error {
 		return err
 	}
 	return PatchNodeAnnotations(n, tmppat)
+}
+
+func CopyFile(src, dst string) error {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer func(srcFile *os.File) {
+		_ = srcFile.Close()
+	}(srcFile)
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer func(dstFile *os.File) {
+		_ = dstFile.Close()
+	}(dstFile)
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return err
+	}
+
+	srcInfo, err := srcFile.Stat()
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(dst, srcInfo.Mode())
+	if err != nil {
+		return err
+	}
+	return nil
 }
